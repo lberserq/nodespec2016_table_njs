@@ -1,0 +1,10 @@
+user => auth => server-commands=> 
+
+
+server-commands:    list-notes (UserName)
+                    about_me(notes) // UnImpersonated
+                    reply_to-to(note_id)
+                    
+                    
+                    
+scenarios
