@@ -11,73 +11,166 @@
  */
 
 var auth = require('./bl_auth')
+var db = require('./db_tarantool')
+const Promise = require('bluebird');
 
-function fixNoteObject(noteObjectIn)
+function fixNoteObject(noteObjectIn, fix)
 {
-    noteObjectIn.creator = auth.getUID(noteObjectIn.creator);
-    noteObjectIn.noteSubject = auth.getUID(noteObjectIn.subject);
-    return noteObjectIn;
+    if (typeof(fix) == "undefined")
+        fix = true;
+        
+    console.log("bl!notes!fixNoteObject\tparams: fix" + fix);
+    
+    if (!fix) {
+        console.log("NoFix");
+        return new Promise(function(resolve, reject)
+        {
+            resolve(noteObjectIn);
+            return noteObjectIn;
+        });
+    } else {
+        console.log("Fix It!");
+        return auth.getUIDs([noteObjectIn.creator, noteObjectIn.noteSubject])
+            .then(function(uids)
+            {
+                console.log("bl!notes!fixNoteObject \t uids=");
+                console.log(uids);
+                noteObjectIn.creator = uids[0];
+                noteObjectIn.noteSubject = uids[1];
+                return noteObjectIn;
+            },
+            function (err)
+            {
+                throw new Error(err);
+            });
+    }
 }
 
 
-var registerNewNote = function(NoteObject)
+var registerNewNote = function(NoteObject, fix)
 {
     var response = new Object();
     response.isOk = true;
-    try
+    
+    if (typeof(fix) == "undefined")
+        fix = true;
+    
+    return new Promise(function(resolve, reject)
     {
-        NoteObject = fixNoteObject(NoteObject)
-        console.log('New Note + from '  + NoteObject.creator + '\t Note:\t' + NoteObject);
-        note_id = 0;
-        //update note_id //getValueNoteId()
-        //db stuff
-        response.data = note_id;
-    }
-    catch(e) {
-        console.log("ERROR " + e.name + ':' + e.message);
-        response.description = "Note Register ERROR";
-        response.data = e.name + ':' + e.message;
-        response.isOk = false;
-    }
+        try
+        {
+            return fixNoteObject(NoteObject, fix)
+            .then(function(NoteObjectFixed)
+            {
+                console.log("bl!notes!registerNewNote!FixedObject");
+                console.log(NoteObjectFixed);
+                return db.tdb_getmaxNoteId()
+                .then(function(note_id)
+                {
+                    console.log("bl!notes!registerNewNote!note_id " + note_id);
+                    note_id = note_id + 1;
+                    NoteObjectFixed.noteId = note_id;
+                    response.data = note_id;
+                    return db.tdb_insertNote(note_id, NoteObjectFixed)
+                    .then(function(data)
+                    {
+                        console.log("bl!notes!tdb_insertNote!data " + data);
+                        response.description = data;
+                        response.data = note_id;
+                        resolve(response);
+                    } 
+                    ,function (e)
+                    {
+                        console.log(e);
+                        if (typeof(e) == "object")
+                            reject(e)
+                        else
+                        {
+                            response.description = "Note Register error";
+                            response.data = e.name + ':' + e.message;
+                            response.isOk = false;
+                            reject(response);
+                        }
+                    });
+                }
+                ,function (e)
+                {
+                    console.log(e);
+                    if (typeof(e) == "object")
+                        reject(e)
+                    else
+                    {
+                        response.description = "Note Register error";
+                        response.data = e.name + ':' + e.message;
+                        response.isOk = false;
+                        reject(response);
+                    }
+                });
+            }
+            ,function (e)
+            {
+                console.log(e);
+                if (typeof(e) == "object")
+                    reject(e)
+                else
+                {
+                    response.description = "Note Register error";
+                    response.data = e.name + ':' + e.message;
+                    response.isOk = false;
+                    reject(response);
+                }
+            });
+        }
+        catch(e) {
+            console.log(e);
+            if (typeof(e) == "object")
+                reject(e)
+            else
+            {
+                response.description = "Note Register error";
+                response.data = e.name + ':' + e.message;
+                response.isOk = false;
+                reject(response);
+            }
+        }
+    });
 };
 
 
 //extract note by noteid
 function getNoteByNoteId(noteId)
 {
-    var notes = [];
-    //db stuff
-    
-    
-    var NoteObject = new Object();
-    NoteObject.date = new Date();
-    NoteObject.noteText = "ABACABA";
-    NoteObject.creator = 0;
-    NoteObject.noteSubject = 0;
-    
-    notes.push(NoteObject);
-    return notes;
-    
+    return new Promise(function(resolve, reject)
+    {
+       return db.tdb_getNoteById(noteId)
+       .then(function(note)
+        {
+            resolve(note);
+            return note;
+        },
+        function (e)
+        {
+            reject(e);
+        });
+    });
 }
 
 //returns from bd notes about userid
 function getNotesByUserId(userId)
 {
-    console.log("Get notes by UserId\t" + userId);
-
-    var notes = [];
-    //    //db stuff
-    
-    var NoteObject = new Object();
-    NoteObject.date = new Date();
-    NoteObject.noteText = "ABACABA";
-    NoteObject.creator = 0;
-    NoteObject.noteSubject = 0;
-    
-    notes.push(NoteObject);
-    
-    
-    return notes;  
+    return new Promise(function(resolve, reject)
+    {
+        return db.tdb_getNotesByUserId(userId)
+       .then(function(notes)
+        {
+            resolve(notes);
+            return notes;
+        },
+        function (e)
+        {
+            reject(e);
+        });
+    });
 };
 
 
@@ -85,92 +178,245 @@ var getNotesByUserName = function(userName)
 {
     var response = new Object();
     response.isOk = true;
-    try
+    return auth.getUID(userName)
+    .then(function(userId)
     {
-        var userId = auth.getUID(userName);
-        console.log("Get notes by UserName\t" + userName)
-        var notes = getNotesByUserId(userId);
-        //db stuff
-    
-        for (var i = 0;i < notes.length; ++i) 
+        console.log("bl!notes!Get notes by UserName\t" + userName)
+        return getNotesByUserId(userId)
+        .then(function(notes)
         {
-            notes[i].creator = auth.getUserName(notes[i].creator);
+            console.log("bl!notes!Get notes by UserName!getNotesByUserId\t" + notes);
+
+            var local_uids = [];
+            for (var i = 0;i < notes.length; ++i) 
+            {
+                local_uids.push(notes[i].creator);
+            }
+            return auth.getUserNames(local_uids)
+            .then(function(data)
+            {
+                for (var i = 0;i < notes.length; ++i) 
+                {
+                    notes[i].creator = data[i];
+                }
+                response.data = notes;
+                return response;
+            },
+            function(e)
+            {
+                var response = new Object();
+                response.data = e.message;
+                response.isOk = false;
+                return response;
+            });
         }
-        response.data = notes;
+        ,function(e)
+        {
+            var response = new Object();
+            response.data = e.message;
+            response.isOk = false;
+            return response;
+        });
     }
-    catch(e)
+    ,function(e)
     {
-        response.data = e.name + ':' + e.message;
+        var response = new Object();
+        response.data = e.message;
         response.isOk = false;
-    }
+        return response;
+    });
     
-    return response;
 };
 
 var replyByNoteId = function(noteId, NoteObject)
 {
     var response = new Object();
     response.isOk = true;
-    try 
+    return new Promise(function(resolve, reject)
     {
-        var predcessor = getNoteByNoteId(noteId).creator;
-        NoteObject.noteSubject = predcessor;
-        response.data = registerNewNote(NoteObject);
-    }
-    catch (e)
-    {
-        response.data = e.name + ':' + e.message;
-        response.isOk = false;
-        return response;
-    }
+        return getNoteByNoteId(noteId, false)
+        .then(function(note)
+        {
+            NoteObject.noteSubject = note.creator;
+            NoteObject.creator = note.noteSubject;
+            console.log("Registering new note");
+            
+            return registerNewNote(NoteObject, false)
+            .then(function(data)
+            {
+                response.data = data;
+                resolve(response);
+            },
+            function(e)
+            {
+                if (typeof(e) == "object")
+                    reject(e)
+                else
+                {
+                    var response = new Object();
+                    response.data = e.name + ':' + e.message;
+                    response.isOk = false;
+                    reject(response);
+                }
+            })
+            
+        },
+        function(e)
+        {
+            if (typeof(e) == "object")
+                reject(e)
+            else
+            {
+                var response = new Object();
+                response.data = e.name + ':' + e.message;
+                response.isOk = false;
+                reject(response);
+            }
+        });
+    });
 };
 
 var getNotesAboutMe = function(userId) 
 {
-    var response = new Object();
-    response.isOk = true;
-    try
+    return new Promise(function(resolve, reject)
     {
-        var notes = getNotesByUserId(userId);
-        for (var i = 0;i < notes.length; ++i) 
+        return getNotesByUserId(userId)
+        .then(function(notes)
         {
-            notes[i].creator = auth.unImpersonateUser(auth.getUserName(notes[i].creator));
-        }
-        response.data = notes;
-    }
-    catch (e)
-    {
-        response = new Object();
-        response.data = e.name + ':' + e.message;
-        response.isOk = false;
-    }
-    return response;
+            try 
+            {
+            //todo refactor
+                var local_uids = [];
+                for (var i = 0;i < notes.length; ++i) 
+                {
+                    local_uids.push(notes[i].creator);
+                }
+                return auth.getUserName(userId)
+                .then(function(userName)
+                {
+                    data = auth.unImpersonateUIDs(local_uids);
+                    
+                    for (var i = 0;i < notes.length; ++i) 
+                    {
+                        if (notes[i].creator != userId)
+                            notes[i].creator = data[i];
+                        else 
+                            notes[i].creator = userName;
+                    }
+                    
+                    
+                    var response = new Object();
+                    response.isOk = true;
+                    response.data = notes;
+                    resolve(response);
+                },
+                function(e)
+                {
+                    if (typeof(e) == "object")
+                        reject(e)
+                    else
+                    {
+                        var response = new Object();
+                        response.data = e.name + ':' + e.message;
+                        response.isOk = false;
+                        reject(response);
+                    }
+                });
+            }
+            catch (e)
+            {
+                if (typeof(e) == "object")
+                    reject(e)
+                else
+                {
+                    var response = new Object();
+                    response.data = e.name + ':' + e.message;
+                    response.isOk = false;
+                    reject(response);
+                }
+            }
+        },
+        function(e) 
+        {
+            if (typeof(e) == "object")
+                reject(e)
+            else
+            {
+                var response = new Object();
+                response.data = e.name + ':' + e.message;
+                response.isOk = false;
+                reject(response);
+            }
+        });
+    });
 };
 
 var updateNoteById = function(noteId, userId, data)
 {
-    var response = new Object();
-    response.isOk = true;
-    try
+    return new Promise(function(resolve, reject) 
     {
-        var note = getNoteByNoteId(noteId);
-        if (note.creator == userId) 
+        var response = new Object();
+        response.isOk = true;
+        try
         {
-            //db-tool
-            response.data = data;
-            //update
-        } else {
-            response.isOk = false;
-            response.data =  noteId + " Is not your note!!!";
+            return getNoteByNoteId(noteId).then(function(note)
+            {
+                console.log("bl!notes!updateNoteById!NOTEID " + noteId);
+                console.log("bl!notes!updateNoteById!NOTE=\t");
+                console.log(note);
+                if (note.creator == userId) 
+                {
+                    note.noteText = data;
+                    return db.tdb_updateNoteById(noteId, note)
+                        .then(function(data)
+                        {
+                            response.data = data;
+                            resolve(response);
+                            return response;
+                        }, function(e)
+                        {
+                            console.log(e);
+                            var response = new Object();
+                            response.data = JSON.stringify(e);
+                            
+                            console.log(response.data);
+                            response.isOk = false;
+                            reject(response);
+                            
+                        });
+
+                } else {
+                    response.isOk = false;
+                    response.data =  noteId + " Is not your note!!!";
+                    reject(response);
+                }
+            }
+            , function(e)
+            {
+                if (typeof(e) == "object")
+                    reject(e)
+                else
+                {
+                    var response = new Object();
+                    response.data = JSON.stringify(e);
+                    response.isOk = false;
+                    reject(response);
+                }
+            });
         }
-    }
-    catch (e)
-    {
-        response = new Object();
-        response.data = e.name + ':' + e.message;
-        response.isOk = false;
-    }
-    return response;
+        catch (e)
+        {
+            if (typeof(e) == "object")
+                reject(e);
+            else
+            {
+                var response = new Object();
+                response.data = JSON.stringify(e);
+                response.isOk = false;
+                reject(response);
+            }
+        }
+    });
 }
 
 module.exports.registerNewNote = registerNewNote;

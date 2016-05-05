@@ -1,83 +1,192 @@
 var auth = require('./bl_auth');
 var noteEngine = require('./bl_notes');
-
+const Promise = require('bluebird');
 
 var commandProcessorImpl = function(packet)
 {
-    console.log('New packet' + packet);
-    try 
+    return new Promise(function(resolve, reject)
     {
-    
+        console.log('New packet' + packet);
+    try 
+    {    
         var unObsPacket = JSON.parse(packet);
-        if (!auth.authUser(unObsPacket.userName))
+        auth.authUser(unObsPacket.userName)
+        .then(function(result)
         {
-            if (unObsPacket.cmd == 'register_user') {
-                auth.registerUser(unObsPacket.userName);
-            } else {
-                return auth.failAuth();
+            console.log("bl:cp:Auth result :"  + result);
+            
+            if (result) 
+            {
+                return result;
+            }
+            
+            console.log("bl:cp:CurrentCommand is :"  + unObsPacket.cmd);
+
+            if (unObsPacket.cmd == 'register_user')
+            {
+                console.log("Trying to register " + unObsPacket.userName);
+                return auth.registerUser(unObsPacket.userName);
+            } else
+            {
+                var response = auth.failAuth(unObsPacket.userName);
+                return response;
             }
         }
-        console.log("User Authentificated " + unObsPacket.userName);
-        
-        var UID = auth.getUID(unObsPacket.userName);
-    
-        console.log("UID", UID);
-        if (unObsPacket.cmd == 'auth_user')
+        , function(e) 
         {
-            response = new Object();
-            response.data = 'OK';
-            response.isOk = true;
+            console.log("bl:Auth failed " + e);
+            var response = auth.failAuth(unObsPacket.userName);
+            response.description = "bl:Auth failed ";
+            response.data = response.data + e;
+            reject(response);
             return response;
+        })
+        .then(function(data)
+        {
+            console.log("GETTING UID");
+            console.log(unObsPacket.userName);
+            var UID = -1;
+            return auth.getUID(unObsPacket.userName).then(function(data)
+            {
+                UID = data;
+                console.log("bl!cp:getUID " + UID);
+                return UID;
+            } 
+            , function(e)
+            {
+                console.log("bl:Auth rejected ");
+                console.log(e);
+                var response = new Object();
+                response.description = "bl:Auth rejected";
+                response.data = e;
+                response.isOk = false;
+                reject(response);
+                //return response;
+            });
         }
-        
-        
-        if (unObsPacket.cmd == 'about_me') {
-            return noteEngine.getNotesAboutMe(UID);
+        ,function(e) 
+        {
+            console.log("bl:Auth rejected ");
+            console.log(e);
+            var response = new Object();
+            response.description = "bl:Auth rejected";
+            response.data = e;
+            response.isOk = false;
+            reject(response);
+            //return response;
+        })
+        .then(function(UID)
+        {
+            if (UID == undefined) {
+                console.log("bl!Assertion Error");
+                var response = new Object();
+                response.data = "Assertion user";
+                response.description = response.data;
+                response.isOk = false;
+                reject(response);
+            } else
+            {
+            
+            console.log("MAIN PROCESSOR");
+            var outPromise = undefined;
+            console.log("UID", UID);
+            if (unObsPacket.cmd == 'auth_user' || unObsPacket.cmd == 'register_user')
+            {
+                outPromise =  new Promise(function(resolve, reject) {
+                    var response = new Object();
+                    response.data = 'OK';
+                    response.isOk = true;
+                    resolve(response);
+                    return response;
+                });
+            } else if (unObsPacket.cmd == 'about_me') {
+                outPromise = noteEngine.getNotesAboutMe(UID);
+            } else if (unObsPacket.cmd == 'list_users'){
+                outPromise =  auth.getUserList();
+            } else if (unObsPacket.cmd == 'about_user') {
+                var userName = unObsPacket.data;
+                console.log("bl:about_user " + userName);
+                outPromise =  noteEngine.getNotesByUserName(userName);
+            } else if (unObsPacket.cmd == 'reply_to') {
+                var noteId = unObsPacket.data.noteId;
+                var notePacket = unObsPacket.data.note;
+                outPromise =  noteEngine.replyByNoteId(noteId, notePacket);
+            } else if (unObsPacket.cmd == 'update_note') {
+                var notePacket = unObsPacket.data.note;
+                outPromise = noteEngine.updateNote(notePacket.noteId, UID, notePacket);
+            } else if (unObsPacket.cmd == 'new_note') {
+                 var notePacket = unObsPacket.data.note;
+                 outPromise = noteEngine.registerNewNote(notePacket);
+            }
+            
+            resolve(outPromise);
+            
+            return outPromise;
+            }
         }
-        
-        if (unObsPacket.cmd == 'list_users'){
-            return auth.getUserList();
+        ,function(e) 
+        {
+            console.log("bl:UID get failed");
+            var response = new Object();
+            response.description = "bl:UID get failed";
+            response.data = e.name + ':' + e.message;
+            response.isOk = false;
+            reject(response);
+            return response;
+        });
         }
-    
-    
-        if (unObsPacket.cmd == 'about_user') {
-            var userName = unObsPacket.data;
-            return noteEngine.getNotesByUserName(userName);
+        catch (e)
+        {
+            return new Promise(function(resolve, reject) {
+                    var response = new Object();
+                    response.data = e.name + ':' + e.message;
+                    response.isOk = false;
+                    resolve(response);
+                    return response;
+                });
         }
-    
-    
-        if (unObsPacket.cmd == 'reply_to') {
-            var noteId = Integer(unObsPacket.data.noteId);
-            var notePacket = unObsPacket.data.note;
-            return noteEngine.replyByNoteId(noteId, notePacket);
-        }
-        
-        if (unObsPacket.cmd == 'update_note') {
-            var noteId = Integer(unObsPacket.data.noteId);
-            var notePacket = unObsPacket.data.note;
-            return noteEngine.getNotesAboutMe(noteId, notePacket);
-        }
-    }
-    catch (e)
-    {
-        var response = new Object();
-        response.data = e.name + ':' + e.message;
-        response.isOk = false;
-        return response;
-    }
-    
+    });
     
 };
 
 var commandProcessor = function(packet)
 {
-    var response = commandProcessorImpl(packet);
     var data = new Object();
-    data.response = response;
-    data.date = new Date();
-    
-    var dataJSON = JSON.stringify(data);
-    return dataJSON;
+    return new Promise(function(resolve, reject)
+    {
+        try
+        {
+            commandProcessorImpl(packet)
+            .then(function(response)
+            {
+                    console.log("COMBINED REPONSE " + response);
+                    data.response = response;
+                    data.date = new Date();
+                    var dataJSON = JSON.stringify(data);
+                    resolve(dataJSON);
+                    return dataJSON;
+            }
+            ,function(e)
+            {
+                data.response = e;
+                console.log("BL:combine ");
+                var dataJSON = JSON.stringify(data);
+                console.log(dataJSON);
+                resolve(dataJSON);
+                return dataJSON;
+                //throw "Combine error: " + e;
+            });
+        }
+        catch (e)
+        {
+            data.response = e;
+            console.log("BL:combine!Exception ");
+            var dataJSON = JSON.stringify(data);
+            console.log(dataJSON);
+            resolve(dataJSON);
+            return dataJSON;
+        }
+    });
 };
 
 module.exports.commandProcessor = commandProcessor;
