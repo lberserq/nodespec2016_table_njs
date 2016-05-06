@@ -3,7 +3,7 @@
   "description":"Note system, warning alot of boilerplate code",
   "repository":"https://github.com/lberserq/nodespec2016_table_njs",
 "dependencies": {
-    "node-websocket": "^1.0.0",
+    "nodejs-websocket": "^1.5.0",
     "babel-cli": "^6.7.7",
     "babel-core": "^6.7.7",
     "babel-eslint": "^5.0.0",
