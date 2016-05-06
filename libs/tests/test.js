@@ -272,8 +272,6 @@ describe('Testing db', function(){
             it ('ws_registerUser -- exists', function(done) {
                 var conn = ws.connect("ws://localhost:8001")
                 .on("text", function(data) {
-                    console.log("DATA_DATA");
-                    console.log(data);
                     var noteData = JSON.parse(data);
                     noteData.response.isOk.should.equal(true);
                     conn.close();
@@ -505,7 +503,6 @@ describe('Testing db', function(){
                 var conn = ws.connect("ws://localhost:8001")
                 .on("text", function(data) {
                     var noteData = JSON.parse(data);
-                    console.log("reply_by_id RESPONSE :" + data);
                     noteData.response.isOk.should.equal(true);
                     if (second_call)
                     {
