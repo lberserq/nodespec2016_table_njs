@@ -21,7 +21,7 @@ script:
    - sleep 3
    - npm run lint
    - npm test
-   - npm coverage
+   - npm run coverage
 
 after_success:
    - ./node_modules/.bin/coveralls
