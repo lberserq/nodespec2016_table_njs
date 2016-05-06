@@ -1,7 +1,7 @@
 {
   "license":"MIT",
-  "description":"Note system, warning alot of boilerplate code"
-  "repository":"https://github.com/lberserq/nodespec2016_table_njs"
+  "description":"Note system, warning alot of boilerplate code",
+  "repository":"https://github.com/lberserq/nodespec2016_table_njs",
 "dependencies": {
     "node-websocket": "^1.0.0",
     "babel-cli": "^6.7.7",
@@ -21,7 +21,7 @@
     "mocha": "^2.4.5",
     "tarantool-driver": "^0.4.1",
     "vk-auth": "^1.0.5",
-    "vk-api": "^1.0.1",
+    "vksdk": "^5.3.1",
     "chai": "^3.5.0",
     "istanbul": "^0.4.3"
   },
