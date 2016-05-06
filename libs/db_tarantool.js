@@ -284,9 +284,10 @@ var destroy_connection = function()
     ,function(e){console.log(e);});
 };
 
-var create_connection = function(host, port, login, pass) 
+var create_connection = function(hostname, portno, login, pass) 
 {
-    conn = new TarantoolConnection({host:host, port: port});
+    console.log(login + ':' + pass + '@' + hostname + ':' + portno);
+    conn = new TarantoolConnection({host:hostname, port: portno});
     tdb_promise = tdb_connect(login, pass);
 };
 

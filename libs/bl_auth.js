@@ -45,6 +45,11 @@ var authUser = function(userName, email, password, connectionNo)
          .then(function(result)
         {
             console.log("bl!authUser: isRU result:" + result);
+            if (process.env.no_vk == "1" || process.env.no_vk == "true")
+            {
+                resolve(result);
+                return result;
+            }
             if (!result)
             {
                 resolve(result);

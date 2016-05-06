@@ -49,8 +49,6 @@ var commandProcessorImpl = function(packet, connectionNo)
         })
         .then(function()
         {
-            console.log("GETTING UID");
-            console.log(unObsPacket.userName);
             var UID = -1;
             return auth.getUID(unObsPacket.userName).then(function(data)
             {

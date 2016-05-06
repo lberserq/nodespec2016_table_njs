@@ -10,7 +10,7 @@ var global_connection_no = 0;
 var global_connections_set = {};
 try
 {
-    db.create_connection(db_config.user, db_config.pass);
+    db.create_connection(db_config.db_host, db_config.db_port, db_config.db_user, db_config.db_pass);
     ws.createServer(function (conn) 
     {
         var connection_no = global_connection_no++;
