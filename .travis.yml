@@ -4,11 +4,11 @@ node_js:
   - "0.12"
   - "iojs"
   - "stable"
-  - "4.1"
   - "4.0"
 cache: false
 
 before_script:
+  - npm install -g coveralls
   - uname -a
   - lsb_release -a
   - curl http://tarantool.org/dist/public.key | sudo apt-key add -
@@ -16,8 +16,13 @@ before_script:
   - sudo apt-get update
 
 script:
+   - rm -rf *.snap *.xlog
    - sudo apt-get -y install tarantool
    - ./libs/tests/setup_test.lua &
    - sleep 3
    - npm run lint
    - npm test
+   - npm coverage
+
+after_success:
+   - ./node_modules/.bin/coveralls
