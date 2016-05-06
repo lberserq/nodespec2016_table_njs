@@ -6,7 +6,7 @@
     "nodejs-websocket": "^1.5.0",
     "babel-cli": "^6.7.7",
     "babel-core": "^6.7.7",
-    "babel-eslint": "^5.0.0",
+    "babel-eslint": "^6.0.4",
     "babel-istanbul": "^0.7.0",
     "babel-preset-es2015-node": "^5.0.3",
     "babel-preset-es2015-node5": "^1.1.2",
