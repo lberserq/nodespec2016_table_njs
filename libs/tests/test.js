@@ -1,7 +1,6 @@
 var chai = require('chai');
 /* eslint-disable */
 var should  = chai.should();
-var WebSocket = require('ws');
 /* eslint-enable */
 
 describe('Testing db', function(){
