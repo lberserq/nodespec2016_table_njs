@@ -1,14 +1,13 @@
 "use strict";
 const TarantoolConnection = require('tarantool-driver');
-var conn = new TarantoolConnection({host:"192.168.1.68", port: 3111});
+var conn = undefined;
 const Promise = require('bluebird');
 
 
-function tdb_connect()
+function tdb_connect(login, pass)
 {
     return conn.connect().then(function(){
-                                console.log("CONNECT");
-				return conn.auth('test', 'test');
+				return conn.auth(login, pass);
 			}, function(e){ console.log(e);});
 }
 
@@ -25,7 +24,10 @@ var tdb_getUserNameImpl = function(userId)
         return conn.select("users", "primary", 1, 0, 'eq', [userId]);
     }, function(e){console.log(e); throw new Error("db-not-connected!");})
     .then(function(data){
-        return data[0][1];
+        if (data.length && data[0].length)
+            return data[0][1];
+        else 
+            return undefined;
     },
     function(e) {console.log(e); throw new Error(e + " Invalid select!");}
     );
@@ -39,17 +41,19 @@ var tdb_getUIDImpl = function(userName)
     .then(function()
     {
         return conn.select("users", "secondary", 1, 0, 'eq', [userName]);
-    }, function(e){console.log(e);throw new Error("db-not-connected!");})
+    }, function(e){console.log("FE " + e); throw new Error("db-not-connected!");})
     .then(function(data){
-        return data[0][0];
+        if (data.length > 0 && data[0].length > 0)
+            return data[0][0];
+        else 
+            return undefined;
     },
-    function(e) {throw new Error(e + " Invalid select!");}
+    function(e) {console.log("SE " + e); new Error(e + " Invalid select!");}
     );
 };
 
 var tdb_getUserListImpl = function()
 {
-    console.log("gUL");
     return tdb_promise
     .then(function()
     {
@@ -57,8 +61,6 @@ var tdb_getUserListImpl = function()
         return conn.select("users", "primary", maxint, 0, 'all', []);
     }, function(e){console.log(e); throw new Error("db-not-connected!");})
     .then(function(data){
-        console.log("Data in getUL");
-        console.log(data);
         var dataList = [];
         for(var i = 0; i < data.length; ++i)
             dataList.push(data[i][1]);
@@ -71,8 +73,6 @@ var tdb_getUserListImpl = function()
 
 var tdb_addUserImpl = function(user, userId)
 {
-    console.log("TDB Registering " + user + " : " + userId);
-    console.log(typeof userId);
     return tdb_promise
     .then(function()
     {
@@ -82,7 +82,6 @@ var tdb_addUserImpl = function(user, userId)
         throw new Error("db-not-connected!");
     })
     .then(function(data){
-        console.log("TDB_ADDUSER!Data " + data);
         return data;
     },
     function(e) {
@@ -99,7 +98,10 @@ var tdb_getNoteByIdImpl = function(noteId)
         return conn.select("notes", "primary", 1, 0, 'eq', [noteId]);
     }, function(e){console.log(e); throw new Error("db-not-connected!");})
     .then(function(data){
-        return JSON.parse(data[0][3]);
+        if (data.length && data[0].length)
+            return JSON.parse(data[0][3]);
+        else 
+            return undefined;
     },
     function(e) {throw new Error(e + " Invalid select!");}
     );
@@ -157,6 +159,8 @@ var tdb_getmaxNoteIdImpl = function()
         return conn.select("notes", "primary", maxint, 0, 'all', []);
     }, function(e){console.log(e); throw new Error("db-not-connected!");})
     .then(function(data){
+        if (!data.length)
+            return 0;
         var id = data[data.length - 1][0];
         return id;
     },
@@ -196,7 +200,6 @@ var tdb_insertNoteImpl = function(noteId, noteObject)
 function tdb_getUidsToUsers(uids, id)
 {
     console.log("tdb!getUids2Users\t params:" + uids + ', ' + id);
-    console.log("First dataVal " + uids[0]);
     return new Promise(function(resolve, reject)
     {
         return tdb_getUserNameImpl(uids[id])
@@ -231,16 +234,13 @@ function tdb_getUidsToUsers(uids, id)
 function tdb_getUsersToUids(userNames, id)
 {
     console.log("tdb!getUsersToUids\t params:" + userNames + ', ' + id);
-    console.log("First dataVal " + userNames[0]);
     return new Promise(function(resolve, reject)
     {
         return tdb_getUIDImpl(userNames[id])
             .then(function(data)
         {
-            console.log("DATA =" + data);
             if (id == userNames.length - 1) 
             {
-                console.log("TRUE_BRANCH");
                 resolve([data]);
                 return [data];
             }
@@ -248,10 +248,7 @@ function tdb_getUsersToUids(userNames, id)
                 return tdb_getUsersToUids(userNames, id + 1)
                     .then(function(dataList)
                 {
-                        console.log("FALSE_BRANCH");
-                        console.log(dataList);
                         dataList.unshift(data);
-                        console.log(dataList);
                         resolve(dataList);
                         return dataList;
                 }
@@ -287,10 +284,10 @@ var destroy_connection = function()
     ,function(e){console.log(e);});
 };
 
-var create_connection = function() 
+var create_connection = function(host, port, login, pass) 
 {
-    console.log("tdb_connect");
-    tdb_promise = tdb_connect();
+    conn = new TarantoolConnection({host:host, port: port});
+    tdb_promise = tdb_connect(login, pass);
 };
 
 

@@ -8,17 +8,6 @@ box.cfg {
     slab_alloc_arena = 0.2
 } 
 
-dbuser = 'test'
-dbpass = 'test'
-if box.schema.user.exists(dbuser) then
-    box.schema.user.create(dbuser, { password = dbpass })
-    box.schema.user.grant(dbuser, 'read', 'space', '_space')
-    box.schema.user.grant(dbuser, 'write', 'space', '_space')
-    box.schema.user.grant(dbuser, 'read', 'space', '_index')
-    box.schema.user.grant(dbuser, 'write', 'space', '_index')
-    box.schema.user.grant(dbuser, 'execute', 'universe')
-end
-
 users = box.space.users
 notes = box.space.notes
 
@@ -48,8 +37,23 @@ notes_subject_index = notes:create_index('subject', {type='tree', unique =false,
 notes:insert({0, 0, 0, '{"date":"2016-05-04T11:25:58.445Z", "creator":0, "noteSubject":0, "noteText":"Simple note about System", "noteId":0}'})
 
 for i = 1, 10 do
-    str = '{"date":"2016-05-04T11:25:58.445Z", "creator":0, "noteSubject":0, "noteText":"Simple note about System"' ..  tostring(i) .. ' ,"noteId: ' .. tostring(i)
+    str = '{"date":"2016-05-04T11:25:58.445Z", "creator":' ..tostring(i)..   ', "noteSubject":' ..tostring(i).. ', "noteText":"Simple note about System' ..tostring(i)..  '"' ..  tostring(i) .. ' ,"noteId: ' .. tostring(i)
     notes:insert({i, i, i, str})
 end
 
 
+
+dbuser = 'test'
+dbpass = 'test'
+if not box.schema.user.exists(dbuser) then
+    box.schema.user.create(dbuser, { password = dbpass })
+    box.schema.user.grant(dbuser, 'read', 'space', '_space')
+    box.schema.user.grant(dbuser, 'write', 'space', '_space')
+    box.schema.user.grant(dbuser, 'read', 'space', '_index')
+    box.schema.user.grant(dbuser, 'write', 'space', '_index')
+    
+    box.schema.user.grant(dbuser, 'read, write', 'space', 'users')
+    box.schema.user.grant(dbuser, 'read, write', 'space', 'notes')
+    
+    box.schema.user.grant(dbuser, 'execute', 'universe')
+end

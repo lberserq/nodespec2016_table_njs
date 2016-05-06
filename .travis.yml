@@ -16,7 +16,7 @@ before_script:
 
 script:
    - sudo apt-get -y install tarantool
-   - ./test/setup_test.lua
+   - ./libs/tests/setup_test.lua
    - sleep 2
    - npm run lint
    - npm test

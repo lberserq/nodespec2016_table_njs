@@ -16,7 +16,6 @@ var connectionUserName = {};
 
 function socialAuth(email, password, resolve, reject)
 {
-    console.log("email:\t" + email + "\tpassword:\t" +password);
     vkAuth.authorize(email, password);
     vkAuth.on("auth", 
         function(tokenParams)
@@ -40,7 +39,6 @@ function socialAuth(email, password, resolve, reject)
 }
 var authUser = function(userName, email, password, connectionNo)
 {
-    console.log("authUser: Begins");
     return new Promise(function(resolve, reject)
     {
          isRegistredUser(userName)
@@ -145,7 +143,7 @@ var getUserList = function()
 
 
 
-function isRegistredUser(userName)
+var isRegistredUser = function(userName)
 {
     //db stuff
     return new Promise(function(resolve, reject)
@@ -153,8 +151,6 @@ function isRegistredUser(userName)
         return db.tdb_getUserList()
         .then(function(userList)
         {
-            console.log("DB UL");
-            console.log(userList);
             var found = false;
             for (var i = 0; i < userList.length && !found; ++i)
             {
@@ -162,10 +158,6 @@ function isRegistredUser(userName)
                 {
                     found = true;
                 }
-            }
-            
-            if (!found) {
-                console.log(userName + " : not found");
             }
             resolve(found);
             return found;
@@ -176,7 +168,7 @@ function isRegistredUser(userName)
             reject(e);
         });
     });
-}
+};
 
 
 var getUID = function(userName)
@@ -191,15 +183,11 @@ var getUserName = function(userId)
 
 var getUserNames = function(userIds)
 {
-    console.log(userIds);
-    console.log("bl!getUserNames \t params: " + userIds);
     return db.tdb_uidsToUsers(userIds);
 };
 
 var getUIDs = function(userNames)
 {
-    console.log(userNames);
-    console.log("bl!getUIDS \t params: " + userNames);
     return db.tdb_usersToUids(userNames);
 };
 
@@ -215,13 +203,10 @@ var registerUser = function(userName)
         return isRegistredUser(userName)
         .then(function(result)
         {
-            console.log("IRU result: "+ result);
             if (!result)
             {
-                
                 console.log("User " + userName + " not found, trying to register");
-                //db stuff add to users table
-                //    return Math.random() * 100;
+
                 var CRC32 = require('crc-32');
                 var userId = Number(CRC32.str(userName)) & 0x0FFFFFFF
                 + (new Date()).getHours();
@@ -285,3 +270,4 @@ module.exports.getUserNames = getUserNames;
 module.exports.getUserList = getUserList;
 module.exports.connectionUserName = connectionUserName;
 
+module.exports.isRegistredUser = isRegistredUser;

@@ -20,7 +20,8 @@ gulp.task('libs', function(){
 		.pipe(plumber())
 		.pipe(changed('build'))
 		.pipe(babel({
-			presets: [
+			presets: 
+			[
 				'es2015-node5',
 				'stage-3'
 			]
