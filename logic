@@ -1,10 +1,13 @@
 user => auth => server-commands=> 
 
 
-server-commands:    list-notes (UserName)
+server-commands:    list_notes(userName)
                     about_me(notes) // UnImpersonated
-                    reply_to-to(note_id)
+                    about_user()
+                    reply_to(note_id, note)
+                    update_note(note_id, note)
+                    new_note(note)
                     
-                    
-                    
-scenarios
+                    auth_user(userName)
+                    register_user(userName)
+                    list_users()

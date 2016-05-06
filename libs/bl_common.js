@@ -110,17 +110,26 @@ var commandProcessorImpl = function(packet, connectionNo)
             } else if (unObsPacket.cmd == 'about_user') {
                 let userName = unObsPacket.data;
                 console.log("bl:about_user " + userName);
-                outPromise =  noteEngine.getNotesByUserName(userName);
+                outPromise =  noteEngine.getNotesByUserName(userName, UID);
             } else if (unObsPacket.cmd == 'reply_to') {
                 let noteId = unObsPacket.data.noteId;
                 let notePacket = unObsPacket.data.note;
-                outPromise =  noteEngine.replyByNoteId(noteId, notePacket);
+                outPromise =  noteEngine.replyByNoteId(noteId, notePacket, UID);
             } else if (unObsPacket.cmd == 'update_note') {
                 let notePacket = unObsPacket.data.note;
                 outPromise = noteEngine.updateNote(notePacket.noteId, UID, notePacket);
             } else if (unObsPacket.cmd == 'new_note') {
                  let notePacket = unObsPacket.data.note;
-                 outPromise = noteEngine.registerNewNote(notePacket);
+                 outPromise = noteEngine.registerNewNote(notePacket, UID);
+            } else {
+                outPromise = new Promise(function(resolve) {
+                    var response = new Object();
+                    response.data = 'Invalid command:';
+                    if (typeof(unObsPacket.cmd) != 'undefined')
+                        response.data += unObsPacket.cmd;
+                    response.isOk = false;
+                    resolve(response);
+                });
             }
             
             resolve(outPromise);

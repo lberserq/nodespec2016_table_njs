@@ -213,8 +213,7 @@ var registerUser = function(userName)
                 console.log("User " + userName + " not found, trying to register");
 
                 var CRC32 = require('crc-32');
-                var userId = Number(CRC32.str(userName)) & 0x0FFFFFFF
-                + (new Date()).getHours();
+                var userId = Number(CRC32.str(userName)) & 0x0FFFFFFF;
                 
                 return db.tdb_addUser(userName, userId)
                 .then(function(data) {

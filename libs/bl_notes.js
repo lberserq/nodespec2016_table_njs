@@ -48,7 +48,7 @@ function fixNoteObject(noteObjectIn, fix)
 }
 
 
-var registerNewNote = function(NoteObject, fix)
+var registerNewNote = function(NoteObject,  UID, fix)
 {
     var response = new Object();
     response.isOk = true;
@@ -65,6 +65,15 @@ var registerNewNote = function(NoteObject, fix)
             {
                 console.log("bl!notes!registerNewNote!FixedObject");
                 console.log(NoteObjectFixed);
+                if (NoteObjectFixed.creator != UID)
+                {
+                    console.log("Security Violation by:" + UID);
+                    response.isOk = false;
+                    response.description = "Security Violation";
+                    response.data = "bl!registerNewNote CreatorUID != sender UIDs";
+                    reject(response);
+                } 
+                else
                 return db.tdb_getmaxNoteId()
                 .then(function(note_id)
                 {
@@ -175,19 +184,19 @@ function getNotesByUserId(userId)
 }
 
 
-var getNotesByUserName = function(userName)
+var getNotesByUserName = function(userName, UID)
 {
     var response = new Object();
     response.isOk = true;
     return auth.getUID(userName)
     .then(function(userId)
     {
-        console.log("bl!notes!Get notes by UserName\t" + userName);
+        if (UID == userId) {
+            return getNotesAboutMe(userId);
+        }
         return getNotesByUserId(userId)
         .then(function(notes)
         {
-            console.log("bl!notes!Get notes by UserName!getNotesByUserId\t" + notes);
-
             var local_uids = [];
             for (var i = 0;i < notes.length; ++i) 
             {
@@ -229,7 +238,7 @@ var getNotesByUserName = function(userName)
     
 };
 
-var replyByNoteId = function(noteId, NoteObject)
+var replyByNoteId = function(noteId, NoteObject, UID)
 {
     var response = new Object();
     response.isOk = true;
@@ -240,9 +249,8 @@ var replyByNoteId = function(noteId, NoteObject)
         {
             NoteObject.noteSubject = note.creator;
             NoteObject.creator = note.noteSubject;
-            console.log("Registering new note");
             
-            return registerNewNote(NoteObject, false)
+            return registerNewNote(NoteObject, UID, false)
             .then(function(data)
             {
                 response.data = data;
@@ -362,12 +370,18 @@ var updateNoteById = function(noteId, userId, data)
         {
             return getNoteByNoteId(noteId).then(function(note)
             {
-                console.log("bl!notes!updateNoteById!NOTEID " + noteId);
-                console.log("bl!notes!updateNoteById!NOTE=\t");
-                console.log(note);
                 if (note.creator == userId) 
                 {
-                    note.noteText = data;
+                    if (typeof(data.noteText) != "undefined")
+                        note.noteText = data.noteText;
+                    else if (typeof(data) == "string")
+                        note.noteText = data;
+                    else {
+                        response.isOk = false;
+                        response.data = "Invalid dataType of input";
+                        reject(response);
+                    }
+                    note.date = new Date();
                     return db.tdb_updateNoteById(noteId, note)
                         .then(function(data)
                         {
@@ -387,6 +401,7 @@ var updateNoteById = function(noteId, userId, data)
                         });
 
                 } else {
+                    console.log("Security Violation by:" + userId);
                     response.isOk = false;
                     response.data =  noteId + " Is not your note!!!";
                     reject(response);

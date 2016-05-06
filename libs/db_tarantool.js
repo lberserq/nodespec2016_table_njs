@@ -17,7 +17,6 @@ var tdb_promise = undefined;
 
 var tdb_getUserNameImpl = function(userId)
 {
-    console.log("tdb!getUserName: \t params: UserId " + userId);
     return tdb_promise
     .then(function()
     {
@@ -48,7 +47,7 @@ var tdb_getUIDImpl = function(userName)
         else 
             return undefined;
     },
-    function(e) {console.log("SE " + e); new Error(e + " Invalid select!");}
+    function(e) {console.log("SE " + e); throw new Error(e + " Invalid select!");}
     );
 };
 
@@ -99,7 +98,15 @@ var tdb_getNoteByIdImpl = function(noteId)
     }, function(e){console.log(e); throw new Error("db-not-connected!");})
     .then(function(data){
         if (data.length && data[0].length)
-            return JSON.parse(data[0][3]);
+             try 
+            {
+                var result = JSON.parse(data[0][3]);
+                return result;
+            }
+            catch(e) 
+            {
+                throw new Error("Parse error " + e);
+            }
         else 
             return undefined;
     },
@@ -117,11 +124,21 @@ var tdb_getNotesByUserIdImpl = function(userId)
     .then(function(data){
         var dataList = [];
         for(var i = 0; i < data.length; ++i)
-            dataList.push(JSON.parse(data[i][3]));
+            try 
+            {
+                dataList.push(JSON.parse(data[i][3]));
+            }
+            catch(e) 
+            {
+                throw new Error("Parse error " + e);
+            }
+        console.log(dataList);
         return dataList;
         
     },
-    function(e) {throw new Error(e + " Invalid select!");}
+    function(e) {
+        console.log(e);
+        throw new Error(e + " Invalid select!");}
     );
 };
 
@@ -170,8 +187,6 @@ var tdb_getmaxNoteIdImpl = function()
 
 var tdb_insertNoteImpl = function(noteId, noteObject)
 {
-    console.log("tdb!insertNoteImpl\tparams:\t noteId=" + noteId + " noteObject=");
-    console.log(noteObject);
     return tdb_promise
     .then(function() 
     {
@@ -199,7 +214,6 @@ var tdb_insertNoteImpl = function(noteId, noteObject)
 
 function tdb_getUidsToUsers(uids, id)
 {
-    console.log("tdb!getUids2Users\t params:" + uids + ', ' + id);
     return new Promise(function(resolve, reject)
     {
         return tdb_getUserNameImpl(uids[id])
@@ -233,7 +247,6 @@ function tdb_getUidsToUsers(uids, id)
 
 function tdb_getUsersToUids(userNames, id)
 {
-    console.log("tdb!getUsersToUids\t params:" + userNames + ', ' + id);
     return new Promise(function(resolve, reject)
     {
         return tdb_getUIDImpl(userNames[id])

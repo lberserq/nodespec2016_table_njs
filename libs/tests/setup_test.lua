@@ -37,7 +37,7 @@ notes_subject_index = notes:create_index('subject', {type='tree', unique =false,
 notes:insert({0, 0, 0, '{"date":"2016-05-04T11:25:58.445Z", "creator":0, "noteSubject":0, "noteText":"Simple note about System", "noteId":0}'})
 
 for i = 1, 10 do
-    str = '{"date":"2016-05-04T11:25:58.445Z", "creator":' ..tostring(i)..   ', "noteSubject":' ..tostring(i).. ', "noteText":"Simple note about System' ..tostring(i)..  '"' ..  tostring(i) .. ' ,"noteId: ' .. tostring(i)
+    str = '{"date":"2016-05-04T11:25:58.445Z", "creator":' ..tostring(i)..   ', "noteSubject":' ..tostring(i).. ', "noteText":"Simple note about System' ..tostring(i).. '" ,"noteId": ' .. tostring(i) ..'}'
     notes:insert({i, i, i, str})
 end
 
