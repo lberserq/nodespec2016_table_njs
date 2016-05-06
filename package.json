@@ -31,7 +31,7 @@
   "version": "0.0.1",
   "scripts": {
     "test": "npm run lint && babel-node ./node_modules/.bin/babel-istanbul cover _mocha libs/tests/test.js",
-    "coverage": "./node_modules/.bin/coveralls",
+    "coverage": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
     "lint": "node ./node_modules/.bin/gulp lint",
     "build": "node ./node_modules/.bin/gulp build",
     "watch": "node ./node_modules/.bin/gulp"
