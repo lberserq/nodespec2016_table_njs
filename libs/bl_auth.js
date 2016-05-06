@@ -1,6 +1,6 @@
 "use strict";
 var db = require('./db_tarantool');
-const Promise = require('bluebird');
+var Promise = require('bluebird');
 
 var vkAuth = require('vk-auth')(5450078 , 'friends');
 var VK = require('vksdk');

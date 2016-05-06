@@ -4,7 +4,7 @@ var bl = require("./bl_common");
 var db = require("./db_tarantool");
 var bl_auth = require("./bl_auth");
 var db_config = require("./db_config");
-const Promise = require("bluebird");
+var Promise = require("bluebird");
 
 var global_connection_no = 0;
 var global_connections_set = {};

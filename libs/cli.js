@@ -5,7 +5,7 @@ function print(msg) {
 
 var con = undefined;
 
-const ws = require("nodejs-websocket");
+var ws = require("nodejs-websocket");
 
 function setupCon(con)
 {

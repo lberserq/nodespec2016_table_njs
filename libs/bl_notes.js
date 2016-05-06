@@ -13,7 +13,7 @@
 
 var auth = require('./bl_auth');
 var db = require('./db_tarantool');
-const Promise = require('bluebird');
+var Promise = require('bluebird');
 
 function fixNoteObject(noteObjectIn, fix)
 {

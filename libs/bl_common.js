@@ -1,7 +1,7 @@
 "use strict";
 var auth = require('./bl_auth');
 var noteEngine = require('./bl_notes');
-const Promise = require('bluebird');
+var Promise = require('bluebird');
 
 var commandProcessorImpl = function(packet, connectionNo)
 {

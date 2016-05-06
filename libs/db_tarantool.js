@@ -1,7 +1,7 @@
 "use strict";
-const TarantoolConnection = require('tarantool-driver');
+var TarantoolConnection = require('tarantool-driver');
 var conn = undefined;
-const Promise = require('bluebird');
+var Promise = require('bluebird');
 
 
 function tdb_connect(login, pass)
