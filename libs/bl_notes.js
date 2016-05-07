@@ -20,11 +20,7 @@ function fixNoteObject(noteObjectIn, fix)
     if (typeof(fix) == "undefined")
         fix = true;
     if (!fix) {
-        return new Promise(function(resolve)
-        {
-            resolve(noteObjectIn);
-            return noteObjectIn;
-        });
+       return Promise.resolve(noteObjectIn);
     } else {
         return auth.getUIDs([noteObjectIn.creator, noteObjectIn.noteSubject])
             .then(function(uids)
@@ -76,25 +72,16 @@ var registerNewNote = function(NoteObject,  UID, fix)
         });
 };
 
-
 //extract note by noteid
 function getNoteByNoteId(noteId)
 {
-    return db.tdb_getNoteById(noteId)
-       .then(function(note)
-        {
-            return note;
-        });
+    return db.tdb_getNoteById(noteId);
 }
 
 //returns from bd notes about userid
 function getNotesByUserId(userId)
 {
-    return db.tdb_getNotesByUserId(userId)
-       .then(function(notes)
-        {
-            return notes;
-        });
+    return db.tdb_getNotesByUserId(userId);
 }
 
 
@@ -117,11 +104,11 @@ var getNotesByUserName = function(userName, UID)
                 local_uids.push(notes[i].creator);
             }
             return auth.getUserNames(local_uids)
-            .then(function(data)
+            .then(function(userNames)
             {
                 for (var i = 0;i < notes.length; ++i) 
                 {
-                    notes[i].creator = data[i];
+                    notes[i].creator = userNames[i];
                 }
                 response.data = notes;
                 return response;

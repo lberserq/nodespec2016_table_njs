@@ -104,17 +104,7 @@ var getUserList = function()
         {
             response.data = data;
             return response;
-        }
-//         ,function(e)
-//         {
-//             console.log("ERROR " + e.name + ':' + e.message);
-//             response.description = "Note UserList error";
-//             response.data = e.name + ':' + e.message;
-//             response.isOk = false;
-//             return res;
-//         }
-            
-        );
+        });
 };
 
 
