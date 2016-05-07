@@ -97,8 +97,7 @@ var unImpersonateUIDs = function(uids)
 
 var getUserList = function()
 {
-    var response = new Object();
-    response.isOk = true;
+    const response = { isOk: true };
     return db.tdb_getUserList()
         .then(function(data)
         {
@@ -147,8 +146,7 @@ var getUIDs = function(userNames)
 var registerUser = function(userName)
 {
     console.log("Registering user: " + userName);
-    var response = new Object();
-    response.isOk = true;
+    const response = { isOk: true };
 
     return isRegistredUser(userName)
     .then(function(result)
@@ -190,19 +188,17 @@ var unImpersonateUser = function(userName)
         });
 };
 
-
-
-module.exports.authUser = authUser;
-module.exports.unImpersonateUser = unImpersonateUser;
-module.exports.unImpersonateUIDs = unImpersonateUIDs;
-
-module.exports.registerUser = registerUser;
-module.exports.failAuth = failAuth;
-module.exports.getUID = getUID;
-module.exports.getUIDs = getUIDs;
-module.exports.getUserName = getUserName;
-module.exports.getUserNames = getUserNames;
-module.exports.getUserList = getUserList;
-module.exports.connectionUserName = connectionUserName;
-
-module.exports.isRegistredUser = isRegistredUser;
+module.exports = {
+    authUser: authUser,
+    unImpersonateUser: unImpersonateUser,
+    unImpersonateUIDs: unImpersonateUIDs,
+    registerUser: registerUser,
+    failAuth: failAuth,
+    getUID: getUID,
+    getUIDs: getUIDs,
+    getUserName: getUserName,
+    getUserNames: getUserNames,
+    getUserList: getUserList,
+    connectionUserName: connectionUserName,
+    isRegistredUser: isRegistredUser
+};

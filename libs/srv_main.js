@@ -42,9 +42,6 @@ var startServer = function()
                         
                         resolve(conn);
                     });
-                    //if (JSON.parse(response).isOk != true) {
-                    //    conn.close();
-                    //}
                 }, function(e)
                 {
                     console.log("SRV_MAIN:Error");
@@ -68,8 +65,8 @@ var startServer = function()
         console.log(e);
     }
 };
-//db.destroy_connection();
 
-module.exports.startServer = startServer;
+module.exports  = {
+    startServer: startServer
+};
 
-//startServer();

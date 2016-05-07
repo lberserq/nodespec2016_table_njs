@@ -37,8 +37,7 @@ function fixNoteObject(noteObjectIn, fix)
 
 var registerNewNote = function(NoteObject,  UID, fix)
 {
-    var response = new Object();
-    response.isOk = true;
+    const response = { isOk: true };
     
     if (typeof(fix) == "undefined")
         fix = true;
@@ -87,8 +86,7 @@ function getNotesByUserId(userId)
 
 var getNotesByUserName = function(userName, UID)
 {
-    var response = new Object();
-    response.isOk = true;
+    const response = { isOk: true };
     return auth.getUID(userName)
     .then(function(userId)
     {
@@ -116,8 +114,7 @@ var getNotesByUserName = function(userName, UID)
 
 var replyByNoteId = function(noteId, NoteObject, UID)
 {
-    var response = new Object();
-    response.isOk = true;
+    const response = { isOk: true };
     return getNoteByNoteId(noteId, false)
         .then(function(note)
         {
@@ -160,8 +157,7 @@ var getNotesAboutMe = function(userId)
 
 var updateNoteById = function(noteId, userId, data)
 {
-    var response = new Object();
-    response.isOk = true;
+    const response = { isOk: true };
 
     return getNoteByNoteId(noteId)
         .then(function(note)
@@ -195,12 +191,11 @@ var updateNoteById = function(noteId, userId, data)
             });
 };
 
-module.exports.registerNewNote = registerNewNote;
-module.exports.getNotesByUserName = getNotesByUserName;
-
-module.exports.replyByNoteId = replyByNoteId;
-module.exports.updateNote = updateNoteById;
-
-module.exports.getNotesAboutMe = getNotesAboutMe;
-
+module.exports = {
+    registerNewNote: registerNewNote, 
+    getNotesByUserName: getNotesByUserName,
+    replyByNoteId: replyByNoteId,
+    updateNote: updateNoteById,
+    getNotesAboutMe: getNotesAboutMe
+};
 

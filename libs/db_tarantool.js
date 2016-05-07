@@ -285,27 +285,19 @@ var create_connection = function(hostname, portno, login, pass)
     tdb_promise = tdb_connect(login, pass);
 };
 
-
-module.exports.destroy_connection = destroy_connection;
-module.exports.create_connection = create_connection;
-module.exports.tdb_insertNote = tdb_insertNoteImpl;
-module.exports.tdb_getmaxNoteId = tdb_getmaxNoteIdImpl;
-module.exports.tdb_updateNoteById = tdb_updateNoteByIdImpl;
-
-module.exports.tdb_getNoteById = tdb_getNoteByIdImpl;
-module.exports.tdb_getNotesByUserId = tdb_getNotesByUserIdImpl;
-
-module.exports.tdb_usersToUids = tdb_usersToUids;
-module.exports.tdb_uidsToUsers = tdb_uidsToUsers;
-
-
-
-
-module.exports.tdb_addUser = tdb_addUserImpl;
-module.exports.tdb_getUserList = tdb_getUserListImpl;
-
-module.exports.tdb_getUID = tdb_getUIDImpl;
-module.exports.tdb_getUserName = tdb_getUserNameImpl;
-
-module.exports.tdb_promise = tdb_promise;
-
+module.exports = {
+    destroy_connection: destroy_connection,
+    create_connection: create_connection,
+    tdb_insertNote: tdb_insertNoteImpl,
+    tdb_getmaxNoteId: tdb_getmaxNoteIdImpl,
+    tdb_updateNoteById: tdb_updateNoteByIdImpl,
+    tdb_getNoteById: tdb_getNoteByIdImpl,
+    tdb_getNotesByUserId: tdb_getNotesByUserIdImpl,
+    tdb_usersToUids: tdb_usersToUids,
+    tdb_uidsToUsers: tdb_uidsToUsers,
+    tdb_addUser: tdb_addUserImpl,
+    tdb_getUserList: tdb_getUserListImpl,
+    tdb_getUID: tdb_getUIDImpl,
+    tdb_getUserName: tdb_getUserNameImpl,
+    tdb_promise: tdb_promise
+};

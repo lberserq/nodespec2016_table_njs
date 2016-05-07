@@ -127,5 +127,7 @@ var commandProcessor = function(packet, connectionNo)
             });
 };
 
-module.exports.commandProcessor = commandProcessor;
+module.exports = {
+    commandProcessor: commandProcessor
+};
 
