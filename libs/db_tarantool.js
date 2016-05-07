@@ -46,8 +46,8 @@ var tdb_getUIDImpl = function(userName)
             return data[0][0];
         else 
             return undefined;
-    },
-    function(e) {console.log("SE " + e); throw new Error(e + " Invalid select!");}
+    }
+    //,function(e) {console.log("SE " + e); throw new Error(e + " Invalid select!");}
     );
 };
 

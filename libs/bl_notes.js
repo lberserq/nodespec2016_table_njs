@@ -19,18 +19,13 @@ function fixNoteObject(noteObjectIn, fix)
 {
     if (typeof(fix) == "undefined")
         fix = true;
-        
-    console.log("bl!notes!fixNoteObject\tparams: fix" + fix);
-    
     if (!fix) {
-        console.log("NoFix");
         return new Promise(function(resolve)
         {
             resolve(noteObjectIn);
             return noteObjectIn;
         });
     } else {
-        console.log("Fix It!");
         return auth.getUIDs([noteObjectIn.creator, noteObjectIn.noteSubject])
             .then(function(uids)
             {
@@ -39,10 +34,6 @@ function fixNoteObject(noteObjectIn, fix)
                 noteObjectIn.creator = uids[0];
                 noteObjectIn.noteSubject = uids[1];
                 return noteObjectIn;
-            },
-            function (err)
-            {
-                throw new Error(err);
             });
     }
 }
@@ -58,13 +49,10 @@ var registerNewNote = function(NoteObject,  UID, fix)
     
     return new Promise(function(resolve, reject)
     {
-        try
-        {
+
             return fixNoteObject(NoteObject, fix)
             .then(function(NoteObjectFixed)
             {
-                console.log("bl!notes!registerNewNote!FixedObject");
-                console.log(NoteObjectFixed);
                 if (NoteObjectFixed.creator != UID)
                 {
                     console.log("Security Violation by:" + UID);
@@ -84,65 +72,13 @@ var registerNewNote = function(NoteObject,  UID, fix)
                     return db.tdb_insertNote(note_id, NoteObjectFixed)
                     .then(function(data)
                     {
-                        console.log("bl!notes!tdb_insertNote!data " + data);
+                        //console.log("bl!notes!tdb_insertNote!data " + data);
                         response.description = data;
                         response.data = note_id;
                         resolve(response);
-                    } 
-                    ,function (e)
-                    {
-                        console.log(e);
-                        if (typeof(e) == "object")
-                            reject(e);
-                        else
-                        {
-                            response.description = "Note Register error";
-                            response.data = e.name + ':' + e.message;
-                            response.isOk = false;
-                            reject(response);
-                        }
                     });
-                }
-                ,function (e)
-                {
-                    console.log(e);
-                    if (typeof(e) == "object")
-                        reject(e);
-                    else
-                    {
-                        response.description = "Note Register error";
-                        response.data = e.name + ':' + e.message;
-                        response.isOk = false;
-                        reject(response);
-                    }
                 });
-            }
-            ,function (e)
-            {
-                console.log(e);
-                if (typeof(e) == "object")
-                    reject(e);
-                else
-                {
-                    response.description = "Note Register error";
-                    response.data = e.name + ':' + e.message;
-                    response.isOk = false;
-                    reject(response);
-                }
             });
-        }
-        catch(e) {
-            console.log(e);
-            if (typeof(e) == "object")
-                reject(e);
-            else
-            {
-                response.description = "Note Register error";
-                response.data = e.name + ':' + e.message;
-                response.isOk = false;
-                reject(response);
-            }
-        }
     });
 };
 
@@ -211,29 +147,8 @@ var getNotesByUserName = function(userName, UID)
                 }
                 response.data = notes;
                 return response;
-            },
-            function(e)
-            {
-                var response = new Object();
-                response.data = e.message;
-                response.isOk = false;
-                return response;
             });
-        }
-        ,function(e)
-        {
-            var response = new Object();
-            response.data = e.message;
-            response.isOk = false;
-            return response;
         });
-    }
-    ,function(e)
-    {
-        var response = new Object();
-        response.data = e.message;
-        response.isOk = false;
-        return response;
     });
     
 };
@@ -242,7 +157,7 @@ var replyByNoteId = function(noteId, NoteObject, UID)
 {
     var response = new Object();
     response.isOk = true;
-    return new Promise(function(resolve, reject)
+    return new Promise(function(resolve)
     {
         return getNoteByNoteId(noteId, false)
         .then(function(note)
@@ -255,45 +170,19 @@ var replyByNoteId = function(noteId, NoteObject, UID)
             {
                 response.data = data;
                 resolve(response);
-            },
-            function(e)
-            {
-                if (typeof(e) == "object")
-                    reject(e);
-                else
-                {
-                    var response = new Object();
-                    response.data = e.name + ':' + e.message;
-                    response.isOk = false;
-                    reject(response);
-                }
             });
-            
-        },
-        function(e)
-        {
-            if (typeof(e) == "object")
-                reject(e);
-            else
-            {
-                var response = new Object();
-                response.data = e.name + ':' + e.message;
-                response.isOk = false;
-                reject(response);
-            }
         });
     });
 };
 
 var getNotesAboutMe = function(userId) 
 {
-    return new Promise(function(resolve, reject)
+    return new Promise(function(resolve)
     {
         return getNotesByUserId(userId)
         .then(function(notes)
         {
-            try 
-            {
+
             //todo refactor
                 var local_uids = [];
                 for (var i = 0;i < notes.length; ++i) 
@@ -318,44 +207,7 @@ var getNotesAboutMe = function(userId)
                     response.isOk = true;
                     response.data = notes;
                     resolve(response);
-                },
-                function(e)
-                {
-                    if (typeof(e) == "object")
-                        reject(e);
-                    else
-                    {
-                        var response = new Object();
-                        response.data = e.name + ':' + e.message;
-                        response.isOk = false;
-                        reject(response);
-                    }
                 });
-            }
-            catch (e)
-            {
-                if (typeof(e) == "object")
-                    reject(e);
-                else
-                {
-                    var response = new Object();
-                    response.data = e.name + ':' + e.message;
-                    response.isOk = false;
-                    reject(response);
-                }
-            }
-        },
-        function(e) 
-        {
-            if (typeof(e) == "object")
-                reject(e);
-            else
-            {
-                var response = new Object();
-                response.data = e.name + ':' + e.message;
-                response.isOk = false;
-                reject(response);
-            }
         });
     });
 };
@@ -388,34 +240,12 @@ var updateNoteById = function(noteId, userId, data)
                             response.data = data;
                             resolve(response);
                             return response;
-                        }, function(e)
-                        {
-                            console.log(e);
-                            var response = new Object();
-                            response.data = JSON.stringify(e);
-                            
-                            console.log(response.data);
-                            response.isOk = false;
-                            reject(response);
-                            
                         });
 
                 } else {
                     console.log("Security Violation by:" + userId);
                     response.isOk = false;
                     response.data =  noteId + " Is not your note!!!";
-                    reject(response);
-                }
-            }
-            , function(e)
-            {
-                if (typeof(e) == "object")
-                    reject(e);
-                else
-                {
-                    let  response = new Object();
-                    response.data = JSON.stringify(e);
-                    response.isOk = false;
                     reject(response);
                 }
             });

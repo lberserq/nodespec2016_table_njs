@@ -116,33 +116,21 @@ var getUserList = function()
     response.isOk = true;
     return new Promise(function(resolve, reject)
     {
-        try
+        return db.tdb_getUserList()
+        .then(function(data)
         {
-            return db.tdb_getUserList()
-            .then(function(data)
-            {
-                response.data = data;
-                resolve(response);
-                return data;
-            },
-            function(e)
-            {
-                console.log("ERROR " + e.name + ':' + e.message);
-                response.description = "Note UserList error";
-                response.data = e.name + ':' + e.message;
-                response.isOk = false;
-                reject(e);
-            });
-            
+            response.data = data;
+            resolve(response);
+            return data;
         }
-        catch(e)
+        ,function(e)
         {
             console.log("ERROR " + e.name + ':' + e.message);
             response.description = "Note UserList error";
             response.data = e.name + ':' + e.message;
             response.isOk = false;
-            resolve(e);
-        }
+            reject(e);
+        });
     });
 };
 
