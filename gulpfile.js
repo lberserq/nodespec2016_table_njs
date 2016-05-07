@@ -19,13 +19,7 @@ gulp.task('libs', function(){
 	gulp.src('libs/**/*.js')
 		.pipe(plumber())
 		.pipe(changed('build'))
-		.pipe(babel({
-			presets: 
-			[
-				'es2015-node5',
-				'stage-3'
-			]
-		}))
+		.pipe(babel())
 		.pipe(gulp.dest('build'));
 });
 
