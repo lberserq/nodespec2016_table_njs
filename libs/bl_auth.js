@@ -39,75 +39,60 @@ function socialAuth(email, password, resolve, reject)
 }
 var authUser = function(userName, email, password, connectionNo)
 {
-    return new Promise(function(resolve, reject)
-    {
-         isRegistredUser(userName)
+    return isRegistredUser(userName)
          .then(function(result)
         {
             console.log("bl!authUser: isRU result:" + result);
             if (process.env.no_vk == "1" || process.env.no_vk == "true")
             {
-                resolve(result);
                 return result;
             }
             if (!result)
             {
-                resolve(result);
                 return result;
             }
             if (typeof(connectionUserName[connectionNo]) != "undefined" && connectionUserName[connectionNo] == userName)
             {
-                result = true;
-                resolve(result);
+                return true;
             }
             else 
-            {
-                var succ = function(socialName)
+            return new Promise(function(resolve, reject)
                 {
-                    if (socialName == userName) {
-                        connectionUserName[connectionNo] = userName;
-                        result = true;
-                        resolve(result);
-                    } else {
+                    var succ = function(socialName)
+                    {
+                        if (socialName == userName) {
+                            connectionUserName[connectionNo] = userName;
+                            result = true;
+                            resolve(result);
+                        } else {
+                            result = false;
+                            reject();
+                        }
+                    };
+                    var error = function(err)
+                    {
+                        console.log("VK rejects with error "  + err);
                         result = false;
-                        reject();
-                    }
-                };
-                var error = function(err)
-                {
-                    console.log("VK rejects with error "  + err);
-                    result = false;
-                    resolve(false);
-                };
-                socialAuth(email, password, succ, error);
-            }
-            
-        },
-        function(e)
-        {
-            console.log("bl!authUser: failed:isRegistredUser " + e);
-            reject(e);
-        });
+                        resolve(false);
+                    };
+                    socialAuth(email, password, succ, error);
+                });
     });
 };
 
 var failAuth = function(userName)
 {
-    var response = new Object();
-    response.isOk = false;
-    response.description = 'failAuth:Auth-failed';
-    response.data = 'Failed auth with credentials:\t' + userName;
-    return response;
+    return {
+        isOk: false, 
+        description: 'failAuth:Auth-failed',
+        data: 'Failed auth with credentials:\t' + userName
+    };
 };
 
 var unImpersonateUIDs = function(uids)
 {
     console.log("UnImpersonator:" + uids);
-    var list = [];
-    for (var i = 0; i < uids.length; ++i) {
-        list.push("User #" + uids[i]);
-    }
-    return list;
+    return uids.map(uid => "User #" + uid);
 };
 
 var getUserList = function()
@@ -139,27 +124,12 @@ var getUserList = function()
 var isRegistredUser = function(userName)
 {
     //db stuff
-    return new Promise(function(resolve, reject)
-    {
-        return db.tdb_getUserList()
-        .then(function(userList)
-        {
-            var found = false;
-            for (var i = 0; i < userList.length && !found; ++i)
-            {
-                if (userName == userList[i]) 
-                {
-                    found = true;
-                }
-            }
-            resolve(found);
-            return found;
-        }
-        , function(e)
-        {
-            console.log("Get UL failed " + e);
-            reject(e);
-        });
+    return db.tdb_getUserList() 
+    .then(userList => userList.indexOf(userName) !== -1) 
+    .catch(e => 
+    { 
+        console.log("Get UL failed " + e); 
+        throw e; 
     });
 };
 

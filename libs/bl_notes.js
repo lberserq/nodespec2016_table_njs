@@ -46,22 +46,18 @@ var registerNewNote = function(NoteObject,  UID, fix)
     
     if (typeof(fix) == "undefined")
         fix = true;
-    
-    return new Promise(function(resolve, reject)
-    {
-
-            return fixNoteObject(NoteObject, fix)
-            .then(function(NoteObjectFixed)
+        return fixNoteObject(NoteObject, fix)
+        .then(function(NoteObjectFixed)
+        {
+            if (NoteObjectFixed.creator != UID)
             {
-                if (NoteObjectFixed.creator != UID)
-                {
-                    console.log("Security Violation by:" + UID);
-                    response.isOk = false;
-                    response.description = "Security Violation";
-                    response.data = "bl!registerNewNote CreatorUID != sender UIDs";
-                    reject(response);
-                } 
-                else
+                console.log("Security Violation by:" + UID);
+                response.isOk = false;
+                response.description = "Security Violation";
+                response.data = "bl!registerNewNote CreatorUID != sender UIDs";
+                return response;
+            } 
+            else
                 return db.tdb_getmaxNoteId()
                 .then(function(note_id)
                 {
@@ -72,51 +68,33 @@ var registerNewNote = function(NoteObject,  UID, fix)
                     return db.tdb_insertNote(note_id, NoteObjectFixed)
                     .then(function(data)
                     {
-                        //console.log("bl!notes!tdb_insertNote!data " + data);
                         response.description = data;
                         response.data = note_id;
-                        resolve(response);
+                        return response;
                     });
                 });
-            });
-    });
+        });
 };
 
 
 //extract note by noteid
 function getNoteByNoteId(noteId)
 {
-    return new Promise(function(resolve, reject)
-    {
-       return db.tdb_getNoteById(noteId)
+    return db.tdb_getNoteById(noteId)
        .then(function(note)
         {
-            resolve(note);
             return note;
-        },
-        function (e)
-        {
-            reject(e);
         });
-    });
 }
 
 //returns from bd notes about userid
 function getNotesByUserId(userId)
 {
-    return new Promise(function(resolve, reject)
-    {
-        return db.tdb_getNotesByUserId(userId)
+    return db.tdb_getNotesByUserId(userId)
        .then(function(notes)
         {
-            resolve(notes);
             return notes;
-        },
-        function (e)
-        {
-            reject(e);
         });
-    });
 }
 
 
@@ -157,70 +135,57 @@ var replyByNoteId = function(noteId, NoteObject, UID)
 {
     var response = new Object();
     response.isOk = true;
-    return new Promise(function(resolve)
-    {
-        return getNoteByNoteId(noteId, false)
+    return getNoteByNoteId(noteId, false)
         .then(function(note)
         {
             NoteObject.noteSubject = note.creator;
             NoteObject.creator = note.noteSubject;
-            
             return registerNewNote(NoteObject, UID, false)
             .then(function(data)
             {
                 response.data = data;
-                resolve(response);
+                return response;
             });
         });
-    });
 };
 
 var getNotesAboutMe = function(userId) 
 {
-    return new Promise(function(resolve)
+    return getNotesByUserId(userId)
+    .then(function(notes)
     {
-        return getNotesByUserId(userId)
-        .then(function(notes)
-        {
-
             //todo refactor
-                var local_uids = [];
+            var local_uids = [];
+            for (var i = 0;i < notes.length; ++i) 
+            {
+                local_uids.push(notes[i].creator);
+            }
+            return auth.getUserName(userId)
+            .then(function(userName)
+            {
+                var data = auth.unImpersonateUIDs(local_uids);
                 for (var i = 0;i < notes.length; ++i) 
                 {
-                    local_uids.push(notes[i].creator);
+                    if (notes[i].creator != userId)
+                        notes[i].creator = data[i];
+                    else 
+                        notes[i].creator = userName;
                 }
-                return auth.getUserName(userId)
-                .then(function(userName)
-                {
-                    var data = auth.unImpersonateUIDs(local_uids);
-                    
-                    for (var i = 0;i < notes.length; ++i) 
-                    {
-                        if (notes[i].creator != userId)
-                            notes[i].creator = data[i];
-                        else 
-                            notes[i].creator = userName;
-                    }
-                    
-                    
-                    var response = new Object();
-                    response.isOk = true;
-                    response.data = notes;
-                    resolve(response);
-                });
-        });
+                return {
+                    isOk: true,
+                    data: notes
+                };
+            });
     });
 };
 
 var updateNoteById = function(noteId, userId, data)
 {
-    return new Promise(function(resolve, reject) 
-    {
-        var response = new Object();
-        response.isOk = true;
-        try
-        {
-            return getNoteByNoteId(noteId).then(function(note)
+    var response = new Object();
+    response.isOk = true;
+
+    return getNoteByNoteId(noteId)
+        .then(function(note)
             {
                 if (note.creator == userId) 
                 {
@@ -231,14 +196,14 @@ var updateNoteById = function(noteId, userId, data)
                     else {
                         response.isOk = false;
                         response.data = "Invalid dataType of input";
-                        reject(response);
+                        return response;
                     }
                     note.date = new Date();
                     return db.tdb_updateNoteById(noteId, note)
                         .then(function(data)
                         {
                             response.data = data;
-                            resolve(response);
+
                             return response;
                         });
 
@@ -246,23 +211,9 @@ var updateNoteById = function(noteId, userId, data)
                     console.log("Security Violation by:" + userId);
                     response.isOk = false;
                     response.data =  noteId + " Is not your note!!!";
-                    reject(response);
+                    return response;
                 }
             });
-        }
-        catch (e)
-        {
-            if (typeof(e) == "object")
-                reject(e);
-            else
-            {
-                let response = new Object();
-                response.data = JSON.stringify(e);
-                response.isOk = false;
-                reject(response);
-            }
-        }
-    });
 };
 
 module.exports.registerNewNote = registerNewNote;
