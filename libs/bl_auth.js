@@ -99,24 +99,22 @@ var getUserList = function()
 {
     var response = new Object();
     response.isOk = true;
-    return new Promise(function(resolve, reject)
-    {
-        return db.tdb_getUserList()
+    return db.tdb_getUserList()
         .then(function(data)
         {
             response.data = data;
-            resolve(response);
-            return data;
+            return response;
         }
-        ,function(e)
-        {
-            console.log("ERROR " + e.name + ':' + e.message);
-            response.description = "Note UserList error";
-            response.data = e.name + ':' + e.message;
-            response.isOk = false;
-            reject(e);
-        });
-    });
+//         ,function(e)
+//         {
+//             console.log("ERROR " + e.name + ':' + e.message);
+//             response.description = "Note UserList error";
+//             response.data = e.name + ':' + e.message;
+//             response.isOk = false;
+//             return res;
+//         }
+            
+        );
 };
 
 
@@ -161,65 +159,45 @@ var registerUser = function(userName)
     console.log("Registering user: " + userName);
     var response = new Object();
     response.isOk = true;
-    return new Promise(function(resolve, reject)
-    {
-        return isRegistredUser(userName)
-        .then(function(result)
-        {
-            if (!result)
-            {
-                console.log("User " + userName + " not found, trying to register");
 
-                var CRC32 = require('crc-32');
-                var userId = Number(CRC32.str(userName)) & 0x0FFFFFFF;
+    return isRegistredUser(userName)
+    .then(function(result)
+    {
+        if (!result)
+        {
+            console.log("User " + userName + " not found, trying to register");
+            
+            var CRC32 = require('crc-32');
+            var userId = Number(CRC32.str(userName)) & 0x0FFFFFFF;
                 
-                return db.tdb_addUser(userName, userId)
-                .then(function(data) {
+            return db.tdb_addUser(userName, userId)
+                .then(function(data) 
+                {
                     console.log("bl!RegisterUser " + data);
                     response.data = "Registration token " + userId;
-                    resolve(response);
                     return response;
-                },
-                function (e) {
-                    console.log("bl!RegisterUser:Exception " + e);
-                    reject(e);
                 });
-            } else {
-                console.log("bl!RegisterUser:AlreadyRegistred ");
-                response.data = "Already registred";
-                resolve(response);
-                return response;
-            }
+        } else {
+            console.log("bl!RegisterUser:AlreadyRegistred ");
+            response.data = "Already registred";
+            return response;
         }
-        ,function(err)
-        {
-            console.log("bl!RegisterUser!isRegistredUser:Exception " + err);
-            console.log(err);
-            reject(err);
-        });
     });
 };
 
 var unImpersonateUser = function(userName)
 {
-    return new Promise(function(resolve, reject)
-    {
-       return getUID(userName)
-       .then(function(data)
+    return getUID(userName)
+        .then(function(data)
         {
             if (typeof(data) == "undefined")
             {
-                reject("Invalid Invalid User");
+                throw new Error("Invalid Invalid User");
             } else {
                 var val = "User #" + data;
-                resolve(val);
                 return val;
             }
-        },
-        function(e) {
-            reject(e);
-        }); 
-    });
+        });
 };
 
 

@@ -106,16 +106,13 @@ var commandProcessorImpl = function(packet, connectionNo)
 var commandProcessor = function(packet, connectionNo)
 {
     var data = new Object();
-    return new Promise(function(resolve)
-    {
-            commandProcessorImpl(packet, connectionNo)
+    return commandProcessorImpl(packet, connectionNo)
             .then(function(response)
             {
                     console.log("COMBINED REPONSE " + response);
                     data.response = response;
                     data.date = new Date();
                     var dataJSON = JSON.stringify(data);
-                    resolve(dataJSON);
                     return dataJSON;
             }
             ,function(e)
@@ -126,10 +123,8 @@ var commandProcessor = function(packet, connectionNo)
                 console.log("BL:combine ");
                 var dataJSON = JSON.stringify(data);
                 console.log(dataJSON);
-                resolve(dataJSON);
                 return dataJSON;
             });
-    });
 };
 
 module.exports.commandProcessor = commandProcessor;
