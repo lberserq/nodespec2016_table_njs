@@ -155,6 +155,33 @@ describe('Testing db', function(){
                         done();
                     });
             });
+            
+            it('getUserNames', function(done) {
+                bl_auth.getUserNames([0, 1])
+                    .then(function(data)
+                    {
+                        data[0].should.equal("SYSTEM");
+                        data[1].should.equal("1");
+                        done();
+                    });
+            });
+            
+            
+            it('unImpersonateUser -- fail', function(done) {
+                bl_auth.unImpersonateUser("INVALID_USER_ABACABA")
+                    .then(function(err)
+                    {
+                        console.log("UIU");
+                        console.log(err);
+                    },
+                    function(err)
+                    {
+                        console.log("UIUE");
+                        console.log(err);
+                        done();
+                    });
+            });
+            
 
             it('failAuth', function(done){
                 var response = bl_auth.failAuth("SYSTEM");
@@ -298,11 +325,6 @@ describe('Testing db', function(){
                 
                 var conn = ws.connect("ws://localhost:8001")
                 .on("text", function(data) {
-                    if (second_call)
-                        console.log("SECOND_CALL");
-                    else
-                        console.log("FIRST_CALL");
-                    console.log(data);
                     var noteData = JSON.parse(data);
                     noteData.response.isOk.should.equal(true);
                     if (second_call)

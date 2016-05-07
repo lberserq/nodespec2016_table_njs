@@ -249,9 +249,14 @@ var unImpersonateUser = function(userName)
        return getUID(userName)
        .then(function(data)
         {
-            var val = "User #" + data;
-            resolve(val);
-            return "User #" + data;
+            if (typeof(data) == "undefined")
+            {
+                reject("Invalid Invalid User");
+            } else {
+                var val = "User #" + data;
+                resolve(val);
+                return val;
+            }
         },
         function(e) {
             reject(e);
