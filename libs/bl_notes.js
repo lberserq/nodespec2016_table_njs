@@ -98,11 +98,7 @@ var getNotesByUserName = function(userName, UID)
         return getNotesByUserId(userId)
         .then(function(notes)
         {
-            var local_uids = [];
-            for (var i = 0;i < notes.length; ++i) 
-            {
-                local_uids.push(notes[i].creator);
-            }
+            var local_uids = notes.map(function(note) {return note.creator;});
             return auth.getUserNames(local_uids)
             .then(function(userNames)
             {
@@ -142,11 +138,7 @@ var getNotesAboutMe = function(userId)
     .then(function(notes)
     {
             //todo refactor
-            var local_uids = [];
-            for (var i = 0;i < notes.length; ++i) 
-            {
-                local_uids.push(notes[i].creator);
-            }
+            var local_uids = notes.map(function(note) {return note.creator;});
             return auth.getUserName(userId)
             .then(function(userName)
             {
